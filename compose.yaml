@@ -1,0 +1,264 @@
+name: fastapi-repository-chat-agent
+
+x-app-environment: &app-environment
+  REPO_CHAT_ENVIRONMENT: "${REPO_CHAT_ENVIRONMENT:-development}"
+  REPO_CHAT_LOG_LEVEL: "${REPO_CHAT_LOG_LEVEL:-INFO}"
+  REPO_CHAT_MCP_HOST: "0.0.0.0"
+  REPO_CHAT_GATEWAY_HOST: "0.0.0.0"
+  REPO_CHAT_REDIS_URL: "redis://redis:6379/0"
+  REPO_CHAT_NEO4J_URI: "${REPO_CHAT_CONTAINER_NEO4J_URI:-bolt://neo4j:7687}"
+  REPO_CHAT_NEO4J_USERNAME: "${REPO_CHAT_CONTAINER_NEO4J_USERNAME:-neo4j}"
+  REPO_CHAT_NEO4J_PASSWORD: "${REPO_CHAT_NEO4J_PASSWORD:?Set REPO_CHAT_NEO4J_PASSWORD in .env}"
+  REPO_CHAT_NEO4J_DATABASE: "${REPO_CHAT_CONTAINER_NEO4J_DATABASE:-neo4j}"
+  REPO_CHAT_REPOSITORY_ROOT: "/data/repositories"
+  REPO_CHAT_SEMANTIC_SEARCH_ENABLED: "${REPO_CHAT_SEMANTIC_SEARCH_ENABLED:-true}"
+  REPO_CHAT_QDRANT_URL: "http://qdrant:6333"
+  REPO_CHAT_QDRANT_COLLECTION: "${REPO_CHAT_QDRANT_COLLECTION:-repository_code}"
+  REPO_CHAT_EMBEDDING_MODEL: "${REPO_CHAT_EMBEDDING_MODEL:-BAAI/bge-small-en-v1.5}"
+  REPO_CHAT_EMBEDDING_CACHE_DIR: "/tmp/repo-chat-models"
+  HF_HOME: "/tmp/repo-chat-models/huggingface"
+  XDG_CACHE_HOME: "/tmp/repo-chat-cache"
+  HF_HUB_DISABLE_XET: "1"
+  REPO_CHAT_INDEXER_MCP_URL: "http://indexer:8001/mcp"
+  REPO_CHAT_GRAPH_AGENT_MCP_URL: "http://graph-agent:8002/mcp"
+  REPO_CHAT_CODE_ANALYST_MCP_URL: "http://code-analyst:8003/mcp"
+  REPO_CHAT_ORCHESTRATOR_MCP_URL: "http://orchestrator:8004/mcp"
+  REPO_CHAT_REPOSITORY_AGENT_MCP_URL: "http://repository-agent:8005/mcp"
+  REPO_CHAT_AGENT_TIMEOUT_SECONDS: "${REPO_CHAT_AGENT_TIMEOUT_SECONDS:-10}"
+  REPO_CHAT_SEMANTIC_AGENT_TIMEOUT_SECONDS: "${REPO_CHAT_SEMANTIC_AGENT_TIMEOUT_SECONDS:-120}"
+  REPO_CHAT_GATEWAY_ORCHESTRATOR_TIMEOUT_SECONDS: "${REPO_CHAT_GATEWAY_ORCHESTRATOR_TIMEOUT_SECONDS:-180}"
+  REPO_CHAT_GATEWAY_MAXIMUM_CONCURRENT_CHATS: "${REPO_CHAT_GATEWAY_MAXIMUM_CONCURRENT_CHATS:-32}"
+  REPO_CHAT_RESPONSE_CACHE_TTL_SECONDS: "${REPO_CHAT_RESPONSE_CACHE_TTL_SECONDS:-3600}"
+  REPO_CHAT_ROUTING_AUDIT_TTL_SECONDS: "${REPO_CHAT_ROUTING_AUDIT_TTL_SECONDS:-604800}"
+  REPO_CHAT_ROUTING_AUDIT_MAXIMUM_RECORDS: "${REPO_CHAT_ROUTING_AUDIT_MAXIMUM_RECORDS:-100}"
+  REPO_CHAT_INDEX_LOCK_TTL_SECONDS: "${REPO_CHAT_INDEX_LOCK_TTL_SECONDS:-7200}"
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.15.4
+    restart: unless-stopped
+    ports:
+      - "${REPO_CHAT_QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - repo_chat
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+    ports:
+      - "${REPO_CHAT_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - repo_chat
+
+  neo4j:
+    image: neo4j:5.26-community
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: "neo4j/${REPO_CHAT_NEO4J_PASSWORD:?Set REPO_CHAT_NEO4J_PASSWORD in .env}"
+      NEO4J_server_memory_heap_initial__size: "${REPO_CHAT_NEO4J_HEAP_INITIAL:-512m}"
+      NEO4J_server_memory_heap_max__size: "${REPO_CHAT_NEO4J_HEAP_MAX:-1G}"
+      NEO4J_server_memory_pagecache_size: "${REPO_CHAT_NEO4J_PAGECACHE:-512m}"
+    ports:
+      - "${REPO_CHAT_NEO4J_HTTP_PORT:-7474}:7474"
+      - "${REPO_CHAT_NEO4J_BOLT_PORT:-7687}:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:7474 || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - repo_chat
+
+  indexer:
+    build:
+      context: .
+      dockerfile: docker/indexer.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      REPO_CHAT_SERVICE_NAME: indexer
+      REPO_CHAT_MCP_PORT: "8001"
+    ports:
+      - "${REPO_CHAT_INDEXER_PORT:-8001}:8001"
+    volumes:
+      - "${REPO_CHAT_REPOSITORY_HOST_PATH:-./repositories}:/data/repositories:ro"
+    depends_on:
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8001), 2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - repo_chat
+
+  graph-agent:
+    build:
+      context: .
+      dockerfile: docker/graph-agent.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      REPO_CHAT_SERVICE_NAME: graph-agent
+      REPO_CHAT_GRAPH_AGENT_PORT: "8002"
+    ports:
+      - "${REPO_CHAT_GRAPH_PORT:-8002}:8002"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8002), 2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - repo_chat
+
+  code-analyst:
+    build:
+      context: .
+      dockerfile: docker/code-analyst.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      REPO_CHAT_SERVICE_NAME: code-analyst
+      REPO_CHAT_CODE_ANALYST_PORT: "8003"
+    ports:
+      - "${REPO_CHAT_ANALYST_PORT:-8003}:8003"
+    volumes:
+      - "${REPO_CHAT_REPOSITORY_HOST_PATH:-./repositories}:/data/repositories:ro"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8003), 2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - repo_chat
+
+  repository-agent:
+    build:
+      context: .
+      dockerfile: docker/repository-agent.Dockerfile
+    restart: unless-stopped
+    user: "${REPO_CHAT_UID:-1000}:${REPO_CHAT_GID:-1000}"
+    environment:
+      <<: *app-environment
+      REPO_CHAT_SERVICE_NAME: repository-agent
+      REPO_CHAT_REPOSITORY_AGENT_PORT: "8005"
+    ports:
+      - "${REPO_CHAT_REPOSITORY_AGENT_HOST_PORT:-8005}:8005"
+    volumes:
+      - "${REPO_CHAT_REPOSITORY_HOST_PATH:-./repositories}:/data/repositories"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8005), 2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - repo_chat
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: docker/orchestrator.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      REPO_CHAT_SERVICE_NAME: orchestrator
+      REPO_CHAT_ORCHESTRATOR_PORT: "8004"
+      REPO_CHAT_LLM_ENABLED: "${REPO_CHAT_LLM_ENABLED:-false}"
+      REPO_CHAT_LLM_API_KEY: "${REPO_CHAT_LLM_API_KEY:-}"
+      REPO_CHAT_LLM_MODEL: "${REPO_CHAT_LLM_MODEL:-openai/gpt-oss-20b}"
+      REPO_CHAT_LLM_BASE_URL: "${REPO_CHAT_LLM_BASE_URL:-https://api.groq.com/openai/v1}"
+      REPO_CHAT_LLM_TIMEOUT_SECONDS: "${REPO_CHAT_LLM_TIMEOUT_SECONDS:-20}"
+      REPO_CHAT_LLM_MAXIMUM_INPUT_CHARACTERS: "${REPO_CHAT_LLM_MAXIMUM_INPUT_CHARACTERS:-20000}"
+      REPO_CHAT_LLM_MAXIMUM_OUTPUT_TOKENS: "${REPO_CHAT_LLM_MAXIMUM_OUTPUT_TOKENS:-1200}"
+    ports:
+      - "${REPO_CHAT_ORCHESTRATOR_HOST_PORT:-8004}:8004"
+    depends_on:
+      redis:
+        condition: service_healthy
+      indexer:
+        condition: service_healthy
+      graph-agent:
+        condition: service_healthy
+      code-analyst:
+        condition: service_healthy
+      repository-agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8004), 2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - repo_chat
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      REPO_CHAT_SERVICE_NAME: gateway
+      REPO_CHAT_GATEWAY_PORT: "8000"
+    ports:
+      - "${REPO_CHAT_GATEWAY_HOST_PORT:-8000}:8000"
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - repo_chat
+
+volumes:
+  redis_data:
+  neo4j_data:
+  neo4j_logs:
+  qdrant_data:
+
+networks:
+  repo_chat:
+    driver: bridge

@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastapi-repository-chat-agent"
+version = "0.1.0"
+description = "MCP multi-agent system for understanding the FastAPI repository"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "mcp>=1.0",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "httpx>=0.28",
+    "redis>=5.2",
+    "neo4j>=5.27",
+    "structlog>=24.4",
+    "qdrant-client>=1.15,<2",
+    "fastembed>=0.7,<1",
+    "numpy>=2,<2.3",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/repo_chat"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "--strict-markers --strict-config"
+markers = [
+    "integration: requires live infrastructure such as Neo4j or Redis",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "apps", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["repo_chat"]
+
+[[tool.mypy.overrides]]
+module = ["fastembed", "fastembed.*", "qdrant_client", "qdrant_client.*"]
+follow_imports = "skip"

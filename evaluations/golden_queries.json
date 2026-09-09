@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "minimum_pass_rate": 1.0,
+  "stream_cases": [
+    {
+      "id": "stream-implementation-apirouter",
+      "query": "Show the implementation of APIRouter",
+      "required_events": ["status", "evidence", "token", "done"],
+      "minimum_token_events": 2
+    }
+  ],
+  "cases": [
+    {
+      "id": "entity-fastapi",
+      "category": "exact-entity",
+      "query": "What is the FastAPI class?",
+      "expected_agents": ["graph"],
+      "answer_term_groups": [["fastapi.applications.fastapi", "fastapi class"]]
+    },
+    {
+      "id": "implementation-apirouter",
+      "category": "exact-source",
+      "query": "Show the implementation of APIRouter",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_any": ["fastapi/routing.py"],
+      "answer_term_groups": [["apirouter"], ["routing.py"]]
+    },
+    {
+      "id": "dependency-injection",
+      "category": "mapped-concept",
+      "query": "How does dependency injection work in FastAPI? Include a small code example and cite the implementation.",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_all": ["fastapi/param_functions.py", "fastapi/dependencies/utils.py"],
+      "answer_term_groups": [["depends"], ["solve_dependencies", "resolve"]]
+    },
+    {
+      "id": "request-lifecycle",
+      "category": "multi-hop-concept",
+      "query": "Explain the complete lifecycle of a FastAPI request",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_all": ["fastapi/applications.py", "fastapi/routing.py", "fastapi/dependencies/utils.py"],
+      "answer_term_groups": [["solve_dependencies"], ["serialize_response"]]
+    },
+    {
+      "id": "semantic-validation-errors",
+      "category": "semantic",
+      "query": "Where does FastAPI collect validation errors while processing parameters?",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_any": ["fastapi/dependencies/utils.py", "fastapi/routing.py"],
+      "answer_term_groups": [["error", "validation"], ["parameter", "field"]]
+    },
+    {
+      "id": "semantic-async-threadpool",
+      "category": "semantic",
+      "query": "How does FastAPI decide whether to await a route function or run it in a thread pool?",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_any": ["fastapi/routing.py"],
+      "answer_term_groups": [["await", "async"], ["thread", "threadpool"]]
+    },
+    {
+      "id": "semantic-response-conversion",
+      "category": "semantic",
+      "query": "Where is a returned Python object converted into an HTTP response?",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_any": ["fastapi/routing.py"],
+      "answer_term_groups": [["serialize", "response"]]
+    },
+    {
+      "id": "semantic-nested-dependencies",
+      "category": "semantic",
+      "query": "How are nested dependencies recursively resolved and cached?",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_any": ["fastapi/dependencies/utils.py"],
+      "answer_term_groups": [["depend"], ["cache", "recursive"]]
+    },
+    {
+      "id": "semantic-parameter-analysis",
+      "category": "semantic",
+      "query": "How does FastAPI analyze endpoint function parameters?",
+      "expected_agents": ["graph", "repository", "code_analyst"],
+      "expected_source_paths_any": ["fastapi/dependencies/utils.py"],
+      "answer_term_groups": [["parameter"], ["dependant", "field"]]
+    }
+  ]
+}

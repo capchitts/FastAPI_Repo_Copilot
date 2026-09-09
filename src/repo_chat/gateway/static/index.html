@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Evidence-grounded assistant for the FastAPI repository" />
+    <title>FastAPI Repository Copilot</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <div>
+            <h1>Repository Copilot</h1>
+            <p>Explore FastAPI through graph and source evidence</p>
+          </div>
+        </div>
+        <div class="health" id="health" role="status">
+          <span class="health-dot"></span><span>Checking agents</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="scope" aria-label="Repository scope">
+          <div>
+            <span class="eyebrow">Active scope</span>
+            <h2>Ask the codebase</h2>
+            <p>Answers are generated only after graph and source evidence is collected.</p>
+          </div>
+          <label>
+            Repository
+            <input id="repository" value="fastapi" autocomplete="off" />
+          </label>
+          <label>
+            Revision
+            <input id="revision" value="50113da16fec53b66b80d75e80a89296de4fa5a5" autocomplete="off" />
+          </label>
+          <div class="prompts">
+            <span class="eyebrow">Try asking</span>
+            <button type="button">Explain how APIRouter is implemented</button>
+            <button type="button">Compare Path and Query</button>
+            <button type="button">Explain the complete request lifecycle</button>
+          </div>
+          <a class="docs-link" href="/docs">Open API documentation ↗</a>
+        </aside>
+
+        <section class="chat-panel" aria-label="Repository conversation">
+          <div class="messages" id="messages" aria-live="polite">
+            <article class="message assistant welcome">
+              <div class="avatar">RC</div>
+              <div class="message-body">
+                <p>I’m ready to trace symbols, inspect implementations, and explain how FastAPI works.</p>
+                <p class="muted">Every technical answer includes revision-pinned evidence.</p>
+              </div>
+            </article>
+          </div>
+
+          <form class="composer" id="chat-form">
+            <label class="sr-only" for="message">Ask a repository question</label>
+            <textarea id="message" rows="1" maxlength="10000" placeholder="Ask about a class, function, dependency, or request flow…" required></textarea>
+            <button id="send" type="submit" aria-label="Send question">
+              <span>Send</span><span aria-hidden="true">↑</span>
+            </button>
+          </form>
+          <p class="hint">Enter to send · Shift + Enter for a new line</p>
+        </section>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
