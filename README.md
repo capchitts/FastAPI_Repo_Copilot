@@ -7,7 +7,7 @@ The system is designed as a small production-style service stack rather than a n
 ## Submission Documents
 
 - [DESIGN.md](DESIGN.md) explains the architecture, agent boundaries, indexing flow, retrieval strategy, failure behavior, and current limitations.
-- [WALKTHROUGH.md](WALKTHROUGH.md) is the required written walkthrough and can also be used as a 10-15 minute demo script.
+- [WALKTHROUGH.md](WALKTHROUGH.md) is the end-user replication guide for setup, indexing, queries, observability, tests, and cleanup.
 
 ## What The System Does
 
@@ -81,7 +81,7 @@ evaluations/          Golden query definitions
 repositories/         Local source checkout mount point
 compose.yaml          Docker Compose stack
 DESIGN.md             Architecture and design handover
-WALKTHROUGH.md        Submission walkthrough/demo script
+WALKTHROUGH.md        End-user replication walkthrough
 ```
 
 Local checkout folders such as `repositories/fastapi`, `repositories/cross-file-demo`, and `repositories/reconcile-demo` are ignored by Git. Only `repositories/.gitkeep` is committed.
@@ -254,4 +254,4 @@ The implementation provides correlation logging, not a full OpenTelemetry span b
 - Source code, tests, Dockerfiles, Compose configuration, scripts, and documentation are included.
 - `docker compose up -d --build` starts the service stack.
 - [DESIGN.md](DESIGN.md) covers system architecture, agent design decisions, communication, synthesis, reliability, security, and limitations.
-- [WALKTHROUGH.md](WALKTHROUGH.md) covers setup, indexing, graph population, example queries, multi-agent collaboration, and observability.
+- [WALKTHROUGH.md](WALKTHROUGH.md) covers setup, indexing, graph population, example queries, multi-agent collaboration, observability, tests, troubleshooting, and cleanup.

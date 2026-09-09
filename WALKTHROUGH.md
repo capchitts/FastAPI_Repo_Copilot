@@ -1,100 +1,137 @@
-# FastAPI Repository Chat Agent — Submission Walkthrough
+# Walkthrough: Run and Verify the FastAPI Repository Chat Agent
 
-This document is both the required written walkthrough and a script for a 10–15 minute demo video. It demonstrates the implemented system against the official FastAPI repository at revision `50113da16fec53b66b80d75e80a89296de4fa5a5`.
+This walkthrough is intended for an evaluator or end user running the project on their own machine. It shows how to configure the stack, start all services, index a repository, run example questions, inspect multi-agent behavior, and verify observability/test coverage.
 
-## Demo outcome
+## 1. Prerequisites
 
-The system indexes Python structure into Neo4j and symbol chunks into Qdrant, answers repository questions through collaborating MCP services, cites revision-pinned source, retains bounded session context in Redis, persists index-job status, and returns useful partial results when an agent is unavailable.
+Install or confirm:
 
-The verified FastAPI index contains:
+- Docker with Compose support
+- `git`
+- `curl`
+- `jq`
+- Python 3.12 and `uv`, only if running local tests/scripts outside Docker
 
-- 1,138 Python files;
-- 20,494 extracted entity events;
-- 31,392 extracted relationship events;
-- zero failed files.
+The examples assume commands are run from the repository root.
 
-## Before recording
+## 2. Prepare local configuration
 
-1. Place the FastAPI checkout at `repositories/fastapi`.
-2. Copy `.env.example` to `.env` and configure Neo4j credentials.
-3. Never display `.env`, passwords, tokens, or Aura credentials in the recording.
-4. Build the stack and index the repository before recording if time is limited.
-5. Open four terminals: health, API calls, optional logs, and tests.
-
-Start the stack:
+Create a local `.env` file:
 
 ```bash
-sudo docker compose up -d --build
-sudo docker compose ps
+cp .env.example .env
 ```
 
-Set the revision used by the examples:
+Open `.env` and set a Neo4j password:
+
+```dotenv
+REPO_CHAT_NEO4J_PASSWORD=replace-with-a-local-password
+```
+
+Optional LLM synthesis is disabled by default. To run without any external LLM provider, keep:
+
+```dotenv
+REPO_CHAT_LLM_ENABLED=false
+```
+
+Create the local repository mount directory if it does not already exist:
 
 ```bash
-export FASTAPI_REVISION=50113da16fec53b66b80d75e80a89296de4fa5a5
+mkdir -p repositories
 ```
 
-## 0:00–1:00 — Problem and solution
+## 3. Start the full service stack
 
-Say:
+Build and start all services:
 
-> Suppose I ask, “Explain code for `APIRouter`.” The system finds the definition, checks the file, reads the code, and answers with source references. The Orchestrator chooses those steps; Graph, Repository, and Analyst carry them out through MCP. Before questions, the Indexer prepares graph and vector data. Redis remembers conversations and indexing progress. An optional model can improve wording, but the first answer is built from source facts.
-
-Clarify the assignment ambiguity:
-
-> The assignment says five MCP servers but names four roles. I implemented those roles plus a fifth Repository MCP server with a concrete least-privilege boundary: metadata, bounded source retrieval and search, and provenance verification. The gateway remains a separate non-agent transport service.
-
-## 1:00–2:30 — Architecture
-
-Show [DESIGN.md](DESIGN.md) and describe this request path:
-
-```text
-Client
-  │ REST / SSE / WebSocket
-  ▼
-FastAPI Gateway
-  │ MCP Streamable HTTP
-  ▼
-Orchestrator MCP
-  ├── Graph Query MCP ─────── Neo4j + Qdrant
-  ├── Repository MCP ──────── revision-pinned source verification
-  ├── Code Analyst MCP ───── revision-pinned source checkout
-
-Gateway operational request → Indexer MCP → Neo4j + Qdrant
-
-Redis: conversation sessions + durable index-job records
+```bash
+docker compose up -d --build
 ```
 
-Explain one job per component:
+If your machine uses the older Compose binary:
 
-- Gateway receives the question and gives it a session/trace ID.
-- Orchestrator decides “find → verify → analyze”; its executor supplies actual tool arguments.
-- Graph returns candidate symbols and locations from Neo4j or hybrid search.
-- Repository acquires Git snapshots and checks selected source files.
-- Analyst reads the source and extracts facts without executing it.
-- Indexer prepares the graph and vectors before chat. A call in `routes.py` can be connected to its definition in `helpers.py` after both files are parsed.
-- Redis stores turns, job progress, manifests, cache entries, and coordination keys. The source volume holds files; Neo4j holds structure; Qdrant holds vectors and bounded text.
+```bash
+docker-compose up -d --build
+```
 
-## 2:30–3:15 — Health and deployment
+Check containers:
 
-Run:
+```bash
+docker compose ps
+```
+
+Check Gateway readiness:
 
 ```bash
 curl -sS http://localhost:8000/health/ready | jq
+```
+
+Check all MCP agents:
+
+```bash
 curl -sS http://localhost:8000/api/agents/health | jq
 ```
 
-Point out that Compose uses separate non-root application images, health-ordered dependencies, a private network, persistent Neo4j/Redis volumes, and a read-only source mount for query services.
+Expected result: Gateway should report ready, and configured agents should report healthy. The first startup may take longer because images are built and the embedding model may be downloaded on first semantic use.
 
-## 3:15–4:30 — Indexing and graph population
+## 4. Acquire or provide repository source
 
-If the repository is already indexed, show graph statistics without repeating the full indexing run:
+There are two supported ways to provide source code.
+
+### Option A: use an existing local checkout
+
+Place a FastAPI checkout under the repository mount:
 
 ```bash
-curl -sS "http://localhost:8000/api/graph/statistics?repository_id=fastapi&revision=${FASTAPI_REVISION}" | jq
+git clone https://github.com/fastapi/fastapi.git repositories/fastapi
 ```
 
-To demonstrate job submission, run this only if re-indexing time is acceptable:
+Capture the current commit:
+
+```bash
+export FASTAPI_REVISION="$(git -C repositories/fastapi rev-parse HEAD)"
+echo "$FASTAPI_REVISION"
+```
+
+### Option B: acquire a controlled snapshot through the Repository Agent
+
+The Repository Agent can fetch an approved HTTPS Git remote and publish a commit snapshot under `repositories/<id>/revisions/<sha>`.
+
+```bash
+curl -sS -X POST http://localhost:8000/api/repositories/acquire \
+  -H 'content-type: application/json' \
+  -d '{
+    "repository_id": "fastapi-upstream",
+    "remote_url": "https://github.com/fastapi/fastapi.git",
+    "ref": "master"
+  }' | jq
+```
+
+Copy the returned `revision` value:
+
+```bash
+export FASTAPI_REVISION="PASTE_RETURNED_REVISION"
+```
+
+For the index request in the next step, use:
+
+```text
+repository_path = fastapi-upstream/revisions/<revision>
+repository_id   = fastapi-upstream
+revision        = <revision>
+```
+
+If using Option A, use:
+
+```text
+repository_path = fastapi
+repository_id   = fastapi
+revision        = $FASTAPI_REVISION
+```
+
+## 5. Submit an indexing job
+
+For a local checkout at `repositories/fastapi`:
 
 ```bash
 curl -sS -X POST http://localhost:8000/api/index \
@@ -103,62 +140,105 @@ curl -sS -X POST http://localhost:8000/api/index \
     \"repository_path\": \"fastapi\",
     \"repository_id\": \"fastapi\",
     \"revision\": \"${FASTAPI_REVISION}\",
-    \"mode\": \"incremental\"
-  }" | jq
+    \"mode\": \"full\"
+  }" | tee /tmp/repo-chat-index-job.json | jq
 ```
 
-Copy the returned job ID and poll it:
+Store the job ID:
 
 ```bash
-curl -sS http://localhost:8000/api/index/status/YOUR_JOB_ID | jq
+export INDEX_JOB_ID="$(jq -r '.job_id' /tmp/repo-chat-index-job.json)"
+echo "$INDEX_JOB_ID"
 ```
 
-Say:
+Poll until the job completes or fails:
 
-> The accepted response gives us a job ID, not a finished index. Poll until completed or failed. Redis tracks how many files were processed; Neo4j stores entities and links; Qdrant stores vectors. If the Indexer process crashes, the retained counters help diagnosis, but the Python task cannot resume automatically. A later failure can leave earlier database writes committed.
+```bash
+curl -sS "http://localhost:8000/api/index/status/${INDEX_JOB_ID}" | jq
+```
 
-## 4:30–6:00 — Multi-agent implementation query
+Expected behavior:
 
-Run:
+- `status` starts as `pending` or `running`.
+- `processed_files` increases during the job.
+- On success, `status` becomes `completed`.
+- If a parse or store failure occurs, `status` becomes `failed` and `error` explains the failure.
+
+Indexing populates:
+
+- Neo4j with repositories, revisions, files, modules, classes, functions, methods, imports, calls, inheritance, decorators, parameters, and revision memberships.
+- Qdrant with semantic vectors for class/function/method chunks when semantic search is enabled.
+- Redis with job status, file manifests, idempotency claims, and repository locks.
+
+## 6. Verify graph population
+
+After indexing completes, request graph statistics:
+
+```bash
+curl -sS "http://localhost:8000/api/graph/statistics?repository_id=fastapi&revision=${FASTAPI_REVISION}" | jq
+```
+
+Expected result: non-zero `entity_count`, non-zero `relationship_count`, and an `entities_by_kind` map.
+
+If you indexed an acquired repository using `fastapi-upstream`, replace the repository ID:
+
+```bash
+curl -sS "http://localhost:8000/api/graph/statistics?repository_id=fastapi-upstream&revision=${FASTAPI_REVISION}" | jq
+```
+
+## 7. Run a multi-agent implementation query
+
+Ask for a concrete implementation:
 
 ```bash
 curl -sS -X POST http://localhost:8000/api/chat \
   -H 'content-type: application/json' \
   -d "{
     \"message\": \"Show the implementation of APIRouter\",
-    \"session_id\": \"walkthrough-memory\",
+    \"session_id\": \"walkthrough-session\",
     \"repository_id\": \"fastapi\",
     \"revision\": \"${FASTAPI_REVISION}\"
-  }" | jq
+  }" | tee /tmp/repo-chat-answer.json | jq
 ```
 
-Point out:
+Expected behavior:
 
-- `graph` resolves the preferred executable definition rather than an import or documentation mention;
-- `code_analyst` reads `fastapi/routing.py` from the selected revision;
-- the response includes a bounded explanation and exact source evidence;
-- `partial: false` and an empty warning list mean all required stages succeeded.
+- `agents_used` should include graph/source-analysis participation for a successful implementation answer.
+- `evidence` should include source file and line information.
+- `partial` should be `false` when all required stages succeed.
+- `trace_id` should be present for log lookup.
 
-## 6:00–7:00 — Redis conversational memory
+If using `fastapi-upstream`, replace `repository_id` with `fastapi-upstream`.
 
-Use the same session but omit the entity, repository, and revision:
+The intended agent flow is:
+
+```text
+Gateway
+  -> Orchestrator
+  -> Graph Query Agent
+  -> Repository Agent
+  -> Code Analyst
+  -> Orchestrator synthesis
+```
+
+## 8. Run a session-memory follow-up
+
+Use the same `session_id` and omit repository/revision:
 
 ```bash
 curl -sS -X POST http://localhost:8000/api/chat \
   -H 'content-type: application/json' \
   -d '{
     "message": "What depends on it?",
-    "session_id": "walkthrough-memory"
+    "session_id": "walkthrough-session"
   }' | jq
 ```
 
-Say:
+Expected behavior: the Orchestrator reuses the active entity and repository/revision scope stored in Redis for that session.
 
-> Redis retained the bounded recent turns, active `APIRouter` entity, repository ID, and revision. The Orchestrator resolves “it” from that session and keeps the answer pinned to the same code version. Redis `WATCH` transactions prevent concurrent Orchestrator workers from silently overwriting turns. This is short-lived episodic memory, not permanent audit storage.
+## 9. Run broader repository questions
 
-## 7:00–9:15 — Complex grounded queries
-
-### Request lifecycle
+Request lifecycle question:
 
 ```bash
 curl -sS -X POST http://localhost:8000/api/chat \
@@ -171,9 +251,7 @@ curl -sS -X POST http://localhost:8000/api/chat \
   }" | jq
 ```
 
-Explain that bounded discovery expands the question into `FastAPI.__call__`, `APIRoute.get_route_handler`, `get_request_handler`, `solve_dependencies`, `run_endpoint_function`, and `serialize_response`. The final answer orders these facts chronologically and states the Starlette boundary instead of inventing unindexed runtime detail.
-
-### Path versus Query
+Compare two implementation concepts:
 
 ```bash
 curl -sS -X POST http://localhost:8000/api/chat \
@@ -186,89 +264,22 @@ curl -sS -X POST http://localhost:8000/api/chat \
   }" | jq
 ```
 
-Point out the shared parameter interface and the concrete collaborator difference: `Path` constructs `params.Path`, while `Query` constructs `params.Query`.
-
-Other verified broad categories are request validation, dependency injection, routing decorators, and conservative core-pattern analysis.
-
-## 9:15–10:30 — Failure, retry, and fallback
-
-Stop the Code Analyst:
+Dependency injection question:
 
 ```bash
-sudo docker compose stop code-analyst
+curl -sS -X POST http://localhost:8000/api/chat \
+  -H 'content-type: application/json' \
+  -d "{
+    \"message\": \"How does dependency injection work in FastAPI?\",
+    \"session_id\": \"walkthrough-dependencies\",
+    \"repository_id\": \"fastapi\",
+    \"revision\": \"${FASTAPI_REVISION}\"
+  }" | jq
 ```
 
-Use a reference-dependent follow-up such as “Show the implementation of it” in the session that already discussed `APIRouter`. This bypasses the shared response cache; a new session alone would not. With Analyst stopped, expect earlier successful Graph and Repository outputs to remain, an Analyst warning, and `partial: true`. Inspect the actual `agents_used` list rather than assuming only Graph ran.
+These examples demonstrate deterministic concept expansion, graph lookup, source verification, static source analysis, and final synthesis.
 
-Explain:
-
-> A temporary failure reading a graph entity can be retried after a short delay. Repeating chat could append the same message twice, so the transport client does not blindly retry it. Once allowed retries run out, Orchestrator reports the failed task and keeps usable earlier results.
-
-Restore the service:
-
-```bash
-sudo docker compose start code-analyst
-curl -sS http://localhost:8000/api/agents/health | jq
-```
-
-## 10:30–11:30 — Security and correctness
-
-Cover these points:
-
-- Repository paths are normalized and restricted beneath the configured root.
-- Source is parsed statically and never imported or executed.
-- Source reads and public evidence excerpts are bounded.
-- Custom Cypher rejects mutations, procedures, multiple statements, and unbounded output.
-- Secrets come from configuration and must not enter logs or Git.
-- Correlation IDs cross the public request boundary.
-- The same correlation ID is propagated through Orchestrator and downstream MCP HTTP headers; structured JSON boundary logs show service/tool, attempt, duration, outcome, and normalized errors without recording prompts or source.
-- Answers preserve graph IDs and revision-pinned file/line evidence.
-- Timeouts, typed errors, partial responses, and health endpoints make failures observable.
-
-## 11:30–12:15 — Tests
-
-Run:
-
-```bash
-uv run ruff check .
-uv run mypy
-uv run pytest -q
-```
-
-The two live integration tests are opt-in because they require Redis/Neo4j infrastructure. Mention unit, contract, integration, process-level end-to-end, resilience, structured-output validation, invented-citation rejection, and deterministic LLM fallback coverage. Record the current test count from your final pre-submission run rather than memorizing a stale number.
-
-Run the live golden regression set against the indexed FastAPI revision and show its per-case pass/fail table plus `evaluation-results/latest.json`. Explain that the gate checks agents, source evidence, partial status, trace IDs, and semantic concepts rather than brittle exact prose:
-
-```bash
-uv run python scripts/run_golden_evaluation.py \
-  --revision 50113da16fec53b66b80d75e80a89296de4fa5a5
-```
-
-The verified September 4 baseline is 10/10 passing checks (nine answer cases plus the SSE contract) with 5,656 revision-filtered vectors in local Qdrant. The report also captures p50, p95, and maximum latency. Preserve it or capture the terminal summary for the submission demonstration.
-
-The final measured golden run reported p50 `47.2 ms` and p95/max `2075.2 ms`; the semantic async/thread-pool query accounted for the outlier. The concurrent smoke run completed 10/10 requests with zero failures or admission rejections at concurrency 3, measured `26.781 requests/second`, p50 `108.385 ms`, and p95/max `117.098 ms`. State that these figures are local and cache-sensitive.
-
-Use a failed semantic case to demonstrate the evaluation loop: inspect ranked evidence, distinguish retrieval from rendering failures, add bounded query expansion/reranking, and rerun only that case before executing the full suite.
-
-## 12:15–13:00 — Honest limitations and roadmap
-
-Say:
-
-> The demo shows supported questions on this indexed revision. It does not prove every Python runtime path or production capacity. Jobs run inside the Indexer process, graph/source revision checks have limits, and authentication and full tracing are future work. Streaming currently chunks the finished answer. The next improvements are durable job recovery, stronger source isolation, access control, and measured scaling.
-
-Finish with:
-
-> The central design principle is evidence before fluency: specialized services retrieve graph structure and exact source first, and synthesis exposes what succeeded, what failed, and which revision supports every code claim.
-
-## Optional API demonstrations
-
-### Chat interface
-
-Open <http://localhost:8000/>. Confirm the agent status shows ready, ask a dependency-injection question that requests a code example, and show the separate code card and copy action. Expand the source/graph evidence, point out the agent badges, and copy the trace ID. Filter the Compose logs by that ID to reconstruct the service path. Ask a follow-up in the same browser tab to demonstrate that the locally retained session ID reconnects the request to Redis conversation memory.
-
-On a source evidence card, show the shortened revision SHA, captured/indexed timestamps, index job ID, immutable status, and controlled local snapshot path. Explain that revisions created before provenance support display a legacy label and need one reindex; the system does not invent missing historical timestamps.
-
-### Server-Sent Events
+## 10. Try Server-Sent Events
 
 ```bash
 curl -N -X POST http://localhost:8000/api/chat \
@@ -281,33 +292,219 @@ curl -N -X POST http://localhost:8000/api/chat \
   }"
 ```
 
-Expected event types are `status`, `evidence`, `token`, optional `warning`, and `done`.
+Expected event types include:
 
-### OpenAPI
+- `status`
+- `evidence`
+- `token`
+- optional `warning`
+- `done`
 
-Open <http://localhost:8000/docs> and show the request/response models generated from the Pydantic contracts.
+The current implementation streams progress and chunks of the completed answer. It does not stream provider tokens directly from an LLM.
 
-### Durable completed-job status
+## 11. Inspect observability logs
 
-Retrieve a completed job, restart the Indexer, and retrieve the same ID:
+Get the trace ID from a chat response:
 
 ```bash
-curl -sS http://localhost:8000/api/index/status/YOUR_JOB_ID | jq
-sudo docker compose restart indexer
-curl -sS http://localhost:8000/api/index/status/YOUR_JOB_ID | jq
+jq -r '.trace_id' /tmp/repo-chat-answer.json
 ```
 
-The status, counters, revision, and timestamps should remain unchanged.
+Search logs with that ID:
 
-## Submission checklist
+```bash
+docker compose logs gateway orchestrator indexer graph-agent repository-agent code-analyst \
+  | rg 'PASTE_TRACE_ID_HERE'
+```
 
-- [ ] `.env` and all credentials are excluded from Git.
-- [ ] `docker compose up -d --build` succeeds from a clean checkout.
-- [ ] All containers become healthy.
-- [ ] The official FastAPI revision is available under the configured source root.
-- [ ] Index status and graph statistics are captured.
-- [ ] Simple, multi-agent, lifecycle, comparison, memory, and failure examples are captured.
-- [ ] Ruff, Mypy, unit tests, and opted-in integration tests are recorded.
-- [ ] `README.md`, `DESIGN.md`, and `WALKTHROUGH.md` are included.
-- [ ] Known limitations are stated accurately.
-- [ ] The private repository grants the evaluator access.
+Expected behavior:
+
+- Gateway logs request completion.
+- MCP client logs outbound tool calls.
+- MCP server middleware logs tool-boundary outcomes.
+- Logs contain correlation IDs, service/tool names, attempts, durations, outcomes, and normalized errors.
+
+The system implements correlation logging, not a full distributed tracing backend.
+
+## 12. Demonstrate partial failure behavior
+
+Stop the Code Analyst:
+
+```bash
+docker compose stop code-analyst
+```
+
+Run a reference-dependent implementation follow-up in the same session:
+
+```bash
+curl -sS -X POST http://localhost:8000/api/chat \
+  -H 'content-type: application/json' \
+  -d '{
+    "message": "Show the implementation of it",
+    "session_id": "walkthrough-session"
+  }' | jq
+```
+
+Expected behavior:
+
+- earlier Graph/Repository evidence may remain available;
+- Code Analyst failure should surface in warnings;
+- `partial` should become `true` when required analysis fails.
+
+Restart the service:
+
+```bash
+docker compose start code-analyst
+curl -sS http://localhost:8000/api/agents/health | jq
+```
+
+## 13. Run tests
+
+Install dependencies locally if needed:
+
+```bash
+uv sync
+```
+
+Run static checks and unit tests:
+
+```bash
+uv run ruff check .
+uv run mypy
+uv run pytest tests/unit
+```
+
+Run the default test suite:
+
+```bash
+uv run pytest
+```
+
+Run opt-in integration tests only when Redis/Neo4j are reachable from the host:
+
+```bash
+RUN_E2E_INTEGRATION=1 uv run pytest tests/integration/test_live_gateway_flow.py -vv -s
+RUN_NEO4J_INTEGRATION=1 uv run pytest tests/integration/test_neo4j_persistence.py -vv -s
+```
+
+Run golden evaluation against the already indexed repository:
+
+```bash
+uv run python scripts/run_golden_evaluation.py \
+  --revision "${FASTAPI_REVISION}" \
+  --repository-id fastapi
+```
+
+Run a small load smoke test:
+
+```bash
+uv run python scripts/run_load_smoke.py \
+  --revision "${FASTAPI_REVISION}" \
+  --repository-id fastapi \
+  --concurrency 3 \
+  --requests 10
+```
+
+Golden evaluation checks stable behavior such as required agents, expected source paths, important concepts, partial status, and trace IDs. It avoids exact full-sentence matching because optional LLM wording can vary.
+
+## 14. Open the browser UI
+
+Open:
+
+```text
+http://localhost:8000/
+```
+
+Use the UI to:
+
+- enter repository ID and revision;
+- ask implementation and lifecycle questions;
+- inspect source/graph evidence;
+- copy trace IDs;
+- verify that follow-up questions keep session context.
+
+Open generated API docs:
+
+```text
+http://localhost:8000/docs
+```
+
+## 15. Cleanup
+
+Stop containers without deleting persistent volumes:
+
+```bash
+docker compose down
+```
+
+Remove volumes only if you want to delete Redis, Neo4j, and Qdrant data:
+
+```bash
+docker compose down -v
+```
+
+Local source checkouts under `repositories/` are intentionally ignored by Git.
+
+## 16. Troubleshooting
+
+### Neo4j password error
+
+If Compose reports that `REPO_CHAT_NEO4J_PASSWORD` is missing, confirm `.env` exists and contains:
+
+```dotenv
+REPO_CHAT_NEO4J_PASSWORD=replace-with-a-local-password
+```
+
+### Gateway not ready
+
+Inspect service health:
+
+```bash
+docker compose ps
+docker compose logs orchestrator gateway
+```
+
+The Orchestrator depends on the downstream MCP services. If an agent is unhealthy, Gateway readiness can fail.
+
+### Indexing job fails
+
+Inspect job status:
+
+```bash
+curl -sS "http://localhost:8000/api/index/status/${INDEX_JOB_ID}" | jq
+```
+
+Then inspect Indexer logs:
+
+```bash
+docker compose logs indexer
+```
+
+Common causes include an incorrect `repository_path`, missing source directory, invalid Neo4j credentials, or unavailable Qdrant/Redis.
+
+### Chat returns no useful evidence
+
+Confirm the repository was indexed with the same `repository_id` and `revision` used in the chat request:
+
+```bash
+curl -sS "http://localhost:8000/api/graph/statistics?repository_id=fastapi&revision=${FASTAPI_REVISION}" | jq
+```
+
+If counts are zero, index the repository first.
+
+## 17. What this walkthrough demonstrates
+
+After completing the steps above, an evaluator has seen:
+
+- service startup through Docker Compose;
+- repository source acquisition or mounting;
+- indexing and knowledge graph population;
+- graph statistics from Neo4j-backed data;
+- semantic/vector-backed broad retrieval;
+- multi-agent collaboration through MCP;
+- source verification and AST-based analysis;
+- deterministic synthesis with optional LLM enhancement;
+- Redis-backed session memory;
+- partial failure behavior;
+- correlation-ID observability;
+- unit/integration/golden/load-smoke testing paths.
