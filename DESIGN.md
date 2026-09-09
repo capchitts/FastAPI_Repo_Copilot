@@ -1,8 +1,8 @@
-# FastAPI Repository Chat Agent — Project Design
+# FastAPI Repository Chat Agent - Design Handover
 
-This guide explains the implemented system through one running example: **“Explain code for `APIRouter`.”** Read the example first, then the details. Proposed improvements are labeled **Future**.
+This document describes the submitted system architecture, service boundaries, data flow, reliability behavior, and known production gaps. Proposed improvements are labeled **Future** so implemented behavior is easy to distinguish from roadmap items.
 
-## Product in one sentence
+## Product summary
 
 The system answers FastAPI repository questions by finding code, reading it, and returning an explanation with source references.
 
@@ -143,7 +143,7 @@ Suppose revision B has an unchanged file, an edited file, and a deleted file:
 
 “Reconcile” means making target-revision index records match the discovered paths, such as removing B's membership for a deleted file while retaining A's historical membership. Neo4j, Qdrant, and Redis updates are separate; a failure can leave earlier writes committed. Atomic activation of all indexes is **Future**.
 
-See [Indexer](05_INDEXER.md) for source-volume examples and exact write order.
+The indexing lifecycle and write-order details are summarized in this document; the implementation lives in `src/repo_chat/indexing/service.py`.
 
 ## 5. Routing design
 
@@ -189,7 +189,7 @@ AgentOutput
   error
 ```
 
-Evidence may contain a graph entity/path or a source location with repository, revision, file, lines, hash, and excerpt. Pydantic validates shapes; it does not prove the semantic truth of the data. Tool contracts are defined in [contracts](../src/repo_chat/contracts/orchestration.py), not a universal invented `ToolResult` envelope.
+Evidence may contain a graph entity/path or a source location with repository, revision, file, lines, hash, and excerpt. Pydantic validates shapes; it does not prove the semantic truth of the data. Tool contracts are defined in `src/repo_chat/contracts/orchestration.py`, not a universal invented `ToolResult` envelope.
 
 ### Failure policy
 
@@ -211,7 +211,7 @@ Content hashes track source content. Because entity IDs can be reused, historica
 
 ### Nodes
 
-Files, modules, classes, functions, methods, parameters, decorators, imports, and docstrings are entity kinds. Repository/revision nodes group them; external symbols record unresolved references. See the [actual schema](../src/repo_chat/graph/schema.py) and [writer](../src/repo_chat/graph/repository.py) for stored properties.
+Files, modules, classes, functions, methods, parameters, decorators, imports, and docstrings are entity kinds. Repository/revision nodes group them; external symbols record unresolved references. The schema and writer implementation are in `src/repo_chat/graph/schema.py` and `src/repo_chat/graph/repository.py`.
 
 ### Relationships
 
@@ -278,7 +278,7 @@ Implemented controls include Git URL/ref checks, no shell interpolation for Git,
 
 For a failed HTTP request, use its trace ID to join Gateway, MCP client, and MCP server logs. Look for the failing tool, duration, and retry outcome. The code avoids recording complete prompt/source payloads as routine log fields.
 
-Full OpenTelemetry spans, datastore instrumentation, metrics export, dashboards, and alerts are **Future**. WebSocket correlation differs from the HTTP middleware path, as detailed in [Observability](13_OBSERVABILITY.md).
+Full OpenTelemetry spans, datastore instrumentation, metrics export, dashboards, and alerts are **Future**. WebSocket correlation differs from the HTTP middleware path because the WebSocket handler creates its own trace ID and does not flow through the same HTTP middleware path.
 
 ## 12. Testing strategy
 
@@ -313,9 +313,9 @@ For example, first prove that `create_item CALLS validate_item` survives parsing
 
 A usable local flow starts services, acquires/indexes a chosen revision, answers supported questions with inspectable evidence, remembers supported follow-ups, and reports failures clearly. Relevant checks should pass for the behavior being changed.
 
-Production readiness additionally needs durable work/recovery, stronger revision isolation, access control, deployment limits, and measured reliability. The [component ownership map](01_ARCHITECTURE_OVERVIEW.md) links each detailed guide and its source references.
+Production readiness additionally needs durable work/recovery, stronger revision isolation, access control, deployment limits, and measured reliability.
 
-## 16. Clarifying design questions
+## 16. Design clarifications
 
 ### How does the Graph Query Agent know what search query to construct?
 
@@ -341,7 +341,7 @@ hybrid_search(query="How is request validation handled?", repository_id="fastapi
 
 Inside Graph Query Agent, the tool name decides the database query template. `find_entity` uses a bounded name/qualified-name lookup. `hybrid_search` combines exact graph lookup with Qdrant semantic results. `get_dependencies` and `get_dependents` use traversal templates over allowed relationship types. The LLM is not generating Cypher.
 
-Interview answer: “The Orchestrator chooses the tool and arguments. The Graph Agent owns fixed, parameterized query templates and safe bounded reads. User text may be passed as a search string to hybrid retrieval, but it is not turned into arbitrary Cypher by a model.”
+In short: the Orchestrator chooses the tool and arguments. The Graph Agent owns fixed, parameterized query templates and safe bounded reads. User text may be passed as a search string to hybrid retrieval, but it is not turned into arbitrary Cypher by a model.
 
 ### What are requested symbols and source symbols?
 

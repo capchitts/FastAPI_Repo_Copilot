@@ -198,7 +198,7 @@ Stop the Code Analyst:
 sudo docker compose stop code-analyst
 ```
 
-Use a reference-dependent follow-up such as “Show its implementation” in the session that already discussed `APIRouter`. This bypasses the shared response cache; a new session alone would not. With Analyst stopped, expect earlier successful Graph and Repository outputs to remain, an Analyst warning, and `partial: true`. Inspect the actual `agents_used` list rather than assuming only Graph ran.
+Use a reference-dependent follow-up such as “Show the implementation of it” in the session that already discussed `APIRouter`. This bypasses the shared response cache; a new session alone would not. With Analyst stopped, expect earlier successful Graph and Repository outputs to remain, an Analyst warning, and `partial: true`. Inspect the actual `agents_used` list rather than assuming only Graph ran.
 
 Explain:
 
@@ -308,6 +308,6 @@ The status, counters, revision, and timestamps should remain unchanged.
 - [ ] Index status and graph statistics are captured.
 - [ ] Simple, multi-agent, lifecycle, comparison, memory, and failure examples are captured.
 - [ ] Ruff, Mypy, unit tests, and opted-in integration tests are recorded.
-- [ ] `README.md`, `DESIGN.md`, `INTERVIEW_PREPARATION.md`, and this walkthrough are included.
+- [ ] `README.md`, `DESIGN.md`, and `WALKTHROUGH.md` are included.
 - [ ] Known limitations are stated accurately.
 - [ ] The private repository grants the evaluator access.

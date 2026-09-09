@@ -24,6 +24,8 @@ repositories/*
 .DS_Store
 
 # Documentation submitted with the project. All other Markdown notes are local prep.
+*.md
+!README.md
+!DESIGN.md
+!WALKTHROUGH.md
 Interview_Prep/
-Interview_Prep/*
-
