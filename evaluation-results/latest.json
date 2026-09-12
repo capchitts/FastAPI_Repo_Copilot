@@ -1,0 +1,331 @@
+{
+  "suite_version": 1,
+  "run_id": "a4cee9c5",
+  "created_at": "2026-09-04T10:32:14.269450+00:00",
+  "base_url": "http://localhost:8000",
+  "repository_id": "fastapi",
+  "revision": "50113da16fec53b66b80d75e80a89296de4fa5a5",
+  "passed": 10,
+  "total": 10,
+  "pass_rate": 1.0,
+  "minimum_pass_rate": 1.0,
+  "latency": {
+    "minimum_ms": 42.676,
+    "p50_ms": 47.201,
+    "p95_ms": 2075.168,
+    "maximum_ms": 2075.168
+  },
+  "results": [
+    {
+      "id": "entity-fastapi",
+      "passed": true,
+      "latency_ms": 46.47179799940204,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-entity-fastapi",
+      "answer": "fastapi.applications.FastAPI (class)\n\nSources: [graph entity: class:73d8df1990f678c04e5cff9c2cc8fa231062c03c20aa386a9c63bf9d48a89c37]",
+      "agents_used": [
+        "graph"
+      ],
+      "source_paths": [],
+      "warnings": [
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "implementation-apirouter",
+      "passed": true,
+      "latency_ms": 43.65922400029376,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-implementation-apirouter",
+      "answer": "Resolved: fastapi.routing.APIRouter (class) at fastapi/routing.py:2255-6447.\n\nAPIRouter is a class with 32 directly declared methods and 1 base class. Signature: `class APIRouter(routing.Router)`. Bases: routing.Router. Key methods: __init__, _mark_routes_changed, _get_routes_version, _contains_router, add_route, add_websocket_route, frontend, app, handle, matches \u2026. Key calls: APIWebSocketRoute, Default, Doc, FastAPIError, RedirectResponse, URL, _DefaultLifespan, _FrontendRouteGroup, _IncludedRouter, _RouterIncludeContext.for_include \u2026. Awaited operations: self.default(scope, receive, send), self.app(scope, receive, send), self.lifespan(scope, receive, send), route.handle(scope, receive, send), low_priority_route.handle(scope, receive, send), included_router._handle_selected(scope, receive, send). Control flow: line 2521: if lifespan is None; line 2524: if inspect.isasyncgenfunction(lifespan); line 2526: if inspect.isgeneratorfunction(lifespan); line 2538: if prefix; line 2574: if seen is None; line 2577: if router_id in seen. Return paths: version; False; (Match.NONE, {}); (Match.NONE, {}, None, None). Explicit raises: FastAPIError(f'Prefix and path cannot be both empty (path operation: {name})'). Purpose: `APIRouter` class, used to group *path operations*, for example to structure     an app in multiple files. It would then be included in the `FastAPI` app, or     in another `APIRouter` (ultimately included in the app). Source: fastapi/routing.py:2255-2294.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/routing.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used.",
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "dependency-injection",
+      "passed": true,
+      "latency_ms": 47.292065999499755,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-dependency-injection",
+      "answer": "In FastAPI a dependency is declared with the `Depends` marker. Internally `Depends` creates a `params.Depends` object that tells FastAPI which callable to invoke. When an endpoint is registered, FastAPI calls `get_dependant` to analyse the endpoint\u2019s signature, build a `Dependant` object that contains all sub\u2011dependencies, and stores it on the request. At request time, `solve_dependencies` walks through this tree, re\u2011using cached results for the same request and executing each dependency (including `yield` based generators) to produce the values that are injected into the endpoint function.\n\nA minimal example:\n```python\nfrom fastapi import FastAPI, Depends\n\n# A simple dependency function\ndef get_user_id() -> int:\n    return 42\n\napp = FastAPI()\n\n@app.get(\"/items/\")\ndef read_items(user_id: int = Depends(get_user_id)):\n    return {\"user_id\": user_id}\n```\nWhen a request hits `/items/`, FastAPI resolves `user_id` by invoking `get_user_id` (see `Depends` implementation [fastapi/param_functions.py:2283-2322]), builds the dependency graph via `get_dependant` [fastapi/dependencies/utils.py:271-310], and finally executes the graph in `solve_dependencies` [fastapi/dependencies/utils.py:586-625] to supply `user_id` to `read_items`.\n",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py"
+      ],
+      "warnings": [
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "request-lifecycle",
+      "passed": true,
+      "latency_ms": 46.315416002471466,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-request-lifecycle",
+      "answer": "FastAPI request lifecycle (static, source-grounded trace):\n\n1. **ASGI entry:** `FastAPI.__call__` updates the ASGI scope and delegates into the inherited Starlette application stack. [fastapi/applications.py:1160-1163]\n\n2. **Matched route handler:** After Starlette selects an `APIRoute`, `get_route_handler` creates the handler for that path operation. [fastapi/routing.py:1225-1249]\n\n3. **Request handling:** `get_request_handler` builds the per-request coroutine that coordinates body processing, dependency resolution, endpoint execution, and response creation. [fastapi/routing.py:375-414]\n\n4. **Dependency resolution:** `solve_dependencies` recursively resolves dependency values and manages the request-scoped dependency cache and exit stacks. [fastapi/dependencies/utils.py:586-625]\n\n5. **Endpoint invocation:** `run_endpoint_function` invokes an async endpoint directly or sends a synchronous endpoint to the thread pool. [fastapi/routing.py:344-354]\n\n6. **Response serialization:** `serialize_response` validates and serializes the endpoint result according to the configured response field and serialization options. [fastapi/routing.py:301-340]\n\nTogether, the bounded trace is: `FastAPI.__call__` \u2192 `APIRoute.get_route_handler` \u2192 `get_request_handler` \u2192 `solve_dependencies` \u2192 endpoint execution \u2192 `serialize_response` \u2192 response. Runtime middleware dispatch is inherited from Starlette and is not fully expanded by this FastAPI-only static trace.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/applications.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used.",
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "semantic-validation-errors",
+      "passed": true,
+      "latency_ms": 48.90993899971363,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-semantic-validation-errors",
+      "answer": "Resolved: fastapi.dependencies.utils.request_params_to_args (function) at fastapi/dependencies/utils.py:780-866; fastapi.dependencies.utils.request_body_to_args (function) at fastapi/dependencies/utils.py:951-998; fastapi.dependencies.utils.solve_dependencies (function) at fastapi/dependencies/utils.py:586-731.\n\nMulti-file source analysis:\n\nrequest_params_to_args is a synchronous callable with 2 parameters and 15 distinct calls. Signature: `def request_params_to_args(fields, received_params)`. Key calls: _get_multidict_value, _validate_value_with_model_field, alias.replace, errors.extend, get_cached_model_fields, get_validation_alias, getattr, isinstance, len, lenient_issubclass \u2026. Control flow: line 787: if not fields; line 794: if len(fields) == 1 and lenient_issubclass(first_field.field_info.annotation, BaseModel); line 809: for field in fields_to_extract; line 811: if isinstance(received_params, Headers); line 817: if convert_underscores; line 819: if alias == field.name. Return paths: (values, errors); ({first_field.name: v_}, errors_). Source: fastapi/dependencies/utils.py:780-819.\n\nrequest_body_to_args is an asynchronous callable with 3 parameters and 11 distinct calls. Signature: `async def request_body_to_args(body_fields, received_body, embed_body_fields)`. Key calls: _extract_form_body, _validate_value_with_model_field, body_to_process.get, errors.append, errors.extend, get_cached_model_fields, get_missing_field_error, get_validation_alias, isinstance, len \u2026. Awaited operations: _extract_form_body(fields_to_extract, received_body). Control flow: line 965: if single_not_embedded_field and lenient_issubclass(first_field.field_info.annotation, BaseModel) and isinstance(received_body, FormData); line 972: if isinstance(received_body, FormData); line 975: if single_not_embedded_field; line 981: for field in body_fields; line 984: if body_to_process is not None and (not isinstance(body_to_process, bytes)); line 985: try/except handles AttributeError. Return paths: (values, errors); ({first_field.name: v_}, errors_). Source: fastapi/dependencies/utils.py:951-990.\n\nsolve_dependencies is an asynchronous callable with 10 parameters and 23 distinct calls. Signature: `async def solve_dependencies(request, dependant, body, background_tasks, response, dependency_overrides_provider, dependency_cache, async_exit_stack, embed_body_fields, _uses_scopes_cache)`. Key calls: BackgroundTasks, Response, SecurityScopes, SolvedDependency, _get_cache_key, _get_oauth_scopes, _is_async_gen_callable, _is_coroutine_callable, _is_gen_callable, _solve_generator \u2026. Awaited operations: solve_dependencies(request=request, dependant=use_sub_dependant, body=body, background_tasks=background_tasks, response=response, dependency_overrides_provider=dependency_overrides_provider, dependency_cache=dependency_cache, async_exit_stack=async_exit_stack, embed_body_fields=embed_body_fields, _uses_scopes_cache=_uses_scopes_cache), request_body_to_args(body_fields=dependant.body_params, received_body=body, embed_body_fields=embed_body_fields), _solve_generator(dependant=use_sub_dependant, stack=use_astack, sub_values=solved_result.values), call(**solved_result.values), run_in_threadpool(call, **solved_result.values). Control flow: line 611: if response is None; line 615: if dependency_cache is None; line 617: if _uses_scopes_cache is None; line 619: for sub_dependant in dependant.dependencies; line 623: if dependency_overrides_provider and dependency_overrides_provider.dependency_overrides; line 653: if solved_result.errors. Return paths: SolvedDependency(values=values, errors=errors, background_tasks=background_tasks, response=response, dependency_cache=dependency_cache). Source: fastapi/dependencies/utils.py:586-625.\n\n_FrontendRouteGroup._solve_dependencies is an asynchronous callable with 7 parameters and 6 distinct calls. Signature: `async def _solve_dependencies(self, scope, receive, send, dependant, dependency_overrides_provider, embed_body_fields)`. Key calls: AsyncExitStack, Request, RequestValidationError, scope.get, scope.pop, solve_dependencies. Awaited operations: solve_dependencies(request=request, dependant=dependant, dependency_overrides_provider=dependency_overrides_provider, async_exit_stack=request_stack, embed_body_fields=embed_body_fields). Control flow: line 2229: try/except handles none; line 2230: async with AsyncExitStack(); line 2232: async with AsyncExitStack(); line 2241: if solved_result.errors; line 2245: if previous_inner_astack is _SCOPE_MISSING; line 2249: if previous_function_astack is _SCOPE_MISSING. Explicit raises: RequestValidationError(solved_result.errors). Source: fastapi/routing.py:2216-2252.\n\nForm is a synchronous callable with 30 parameters and 3 distinct calls. Signature: `def Form(default, default_factory, media_type, alias, alias_priority, validation_alias, serialization_alias, title, description, gt, ge, lt, le, min_length, max_length, pattern, regex, discriminator, strict, multiple_of, allow_inf_nan, max_digits, decimal_places, examples, example, openapi_example \u2026`. Key calls: Doc, deprecated, params.Form. Return paths: params.Form(default=default, default_factory=default_factory, media_type=media_type, alias=alias, alias_priority=alias_priority, validation_alias=validation_alias, serialization_alias=se \u2026",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [
+        "MCP tool 'explain_implementation' returned an error: Error executing tool explain_implementation",
+        "LLM synthesis unavailable; deterministic fallback used.",
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "semantic-async-threadpool",
+      "passed": true,
+      "latency_ms": 2075.167540999246,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-semantic-async-threadpool",
+      "answer": "FastAPI decides whether to await a route function based on whether the function is a coroutine. In `get_request_handler` it calls `_is_coroutine_callable(dependant.call)` to set the flag `is_coroutine`. The actual call to the route is performed in `run_endpoint_function`; if `is_coroutine` is true the function is awaited (`await dependant.call(**values)`), otherwise the call is forwarded to `run_in_threadpool(dependant.call, **values)`, which runs the function in a thread\u2011pool thread. This behaviour is defined in `run_endpoint_function` [fastapi/routing.py:344-354] and used via the wrapper in `request_response` [fastapi/routing.py:121-160].",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/concurrency.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [],
+      "response_status": 200
+    },
+    {
+      "id": "semantic-response-conversion",
+      "passed": true,
+      "latency_ms": 49.281958999927156,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-semantic-response-conversion",
+      "answer": "Resolved: fastapi.routing.serialize_response (function) at fastapi/routing.py:301-341; fastapi.applications.FastAPI.options (method) at fastapi/applications.py:3148-3519; fastapi.applications.FastAPI.get (method) at fastapi/applications.py:1646-2017.\n\nMulti-file source analysis:\n\nserialize_response is an asynchronous callable with 11 parameters and 6 distinct calls. Signature: `async def serialize_response(field, response_content, include, exclude, by_alias, exclude_unset, exclude_defaults, exclude_none, is_coroutine, endpoint_ctx, dump_json)`. Key calls: EndpointContext, ResponseValidationError, field.validate, jsonable_encoder, run_in_threadpool, serializer. Awaited operations: run_in_threadpool(field.validate, response_content, {}, loc=('response',)). Control flow: line 315: if field; line 316: if is_coroutine; line 322: if errors. Return paths: serializer(value, include=include, exclude=exclude, by_alias=by_alias, exclude_unset=exclude_unset, exclude_defaults=exclude_defaults, exclude_none=exclude_none); jsonable_encoder(response_content). Explicit raises: ResponseValidationError(errors=errors, body=response_content, endpoint_ctx=ctx). Source: fastapi/routing.py:301-340.\n\nFastAPI.options is a synchronous callable with 24 parameters and 3 distinct calls. Signature: `def options(self, path, response_model, status_code, tags, dependencies, summary, description, response_description, responses, deprecated, operation_id, response_model_include, response_model_exclude, response_model_by_alias, response_model_exclude_unset, response_model_exclude_defaults, response \u2026`. Key calls: Default, Doc, self.router.options. Return paths: self.router.options(path, response_model=response_model, status_code=status_code, tags=tags, dependencies=dependencies, summary=summary, description=description, response_description=response_description, responses=responses, deprecated=deprecated, operation_id=operation_id, response_model_include=response_model_include, response_model_exclude=response_model_exclude, response_model_by_alias=response_model_by_alias, response_model_exclude_unset=response_model_exclude_unset, response_model_exclude_defaults=response_model_exclude_defaults, response_model_exclude_none=response_model_exclude_none, include_in_schema=include_in_schema, response_class=response_class, name=name, callbacks=callbacks, openapi_extra=openapi_extra, generate_unique_id_function=generate_unique_id_function). Purpose: Add a *path operation* using an HTTP OPTIONS operation. Source: fastapi/applications.py:3148-3187.\n\nFastAPI.get is a synchronous callable with 24 parameters and 3 distinct calls. Signature: `def get(self, path, response_model, status_code, tags, dependencies, summary, description, response_description, responses, deprecated, operation_id, response_model_include, response_model_exclude, response_model_by_alias, response_model_exclude_unset, response_model_exclude_defaults, response_mod \u2026`. Key calls: Default, Doc, self.router.get. Return paths: self.router.get(path, response_model=response_model, status_code=status_code, tags=tags, dependencies=dependencies, summary=summary, description=description, response_description=response_description, responses=responses, deprecated=deprecated, operation_id=operation_id, response_model_include=response_model_include, response_model_exclude=response_model_exclude, response_model_by_alias=response_model_by_alias, response_model_exclude_unset=response_model_exclude_unset, response_model_exclude_defaults=response_model_exclude_defaults, response_model_exclude_none=response_model_exclude_none, include_in_schema=include_in_schema, response_class=response_class, name=name, callbacks=callbacks, openapi_extra=openapi_extra, generate_unique_id_function=generate_unique_id_function). Purpose: Add a *path operation* using an HTTP GET operation. Source: fastapi/applications.py:1646-1685.\n\nFastAPI.trace is a synchronous callable with 24 parameters and 3 distinct calls. Signature: `def trace(self, path, response_model, status_code, tags, dependencies, summary, description, response_description, responses, deprecated, operation_id, response_model_include, response_model_exclude, response_model_by_alias, response_model_exclude_unset, response_model_exclude_defaults, response_m \u2026`. Key calls: Default, Doc, self.router.trace. Return paths: self.router.trace(path, response_model=response_model, status_code=status_code, tags=tags, dependencies=dependencies, summary=summary, description=description, response_description=response_description, responses=responses, deprecated=deprecated, operation_id=operation_id, response_model_include=response_model_include, response_model_exclude=response_model_exclude, response_model_by_alias=response_model_by_alias, response_model_exclude_unset=response_model_exclude_unset, response_model_exclude_defaults=response_model_exclude_defaults, response_model_exclude_none=response_model_exclude_none, include_in_schema=include_in_schema, response_class=response_class, name=name, callbacks=callbacks, openapi_extra=openapi_extra, generate_unique_id_function=generate_unique_id_function). Purpose: Add a *path operation* using an HTTP TRACE operation. Source: fastapi/applications.py:4272-4311.\n\nFastAPI.post is a \u2026",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/applications.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used.",
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "semantic-nested-dependencies",
+      "passed": true,
+      "latency_ms": 47.20075899967924,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-semantic-nested-dependencies",
+      "answer": "Resolved: fastapi.dependencies.utils.solve_dependencies (function) at fastapi/dependencies/utils.py:586-731; tests.test_dependency_cache.get_sub_counter_no_cache (function) at tests/test_dependency_cache.py:31-35; fastapi.param_functions.Depends (function) at fastapi/param_functions.py:2283-2369.\n\nMulti-file source analysis:\n\nsolve_dependencies is an asynchronous callable with 10 parameters and 23 distinct calls. Signature: `async def solve_dependencies(request, dependant, body, background_tasks, response, dependency_overrides_provider, dependency_cache, async_exit_stack, embed_body_fields, _uses_scopes_cache)`. Key calls: BackgroundTasks, Response, SecurityScopes, SolvedDependency, _get_cache_key, _get_oauth_scopes, _is_async_gen_callable, _is_coroutine_callable, _is_gen_callable, _solve_generator \u2026. Awaited operations: solve_dependencies(request=request, dependant=use_sub_dependant, body=body, background_tasks=background_tasks, response=response, dependency_overrides_provider=dependency_overrides_provider, dependency_cache=dependency_cache, async_exit_stack=async_exit_stack, embed_body_fields=embed_body_fields, _uses_scopes_cache=_uses_scopes_cache), request_body_to_args(body_fields=dependant.body_params, received_body=body, embed_body_fields=embed_body_fields), _solve_generator(dependant=use_sub_dependant, stack=use_astack, sub_values=solved_result.values), call(**solved_result.values), run_in_threadpool(call, **solved_result.values). Control flow: line 611: if response is None; line 615: if dependency_cache is None; line 617: if _uses_scopes_cache is None; line 619: for sub_dependant in dependant.dependencies; line 623: if dependency_overrides_provider and dependency_overrides_provider.dependency_overrides; line 653: if solved_result.errors. Return paths: SolvedDependency(values=values, errors=errors, background_tasks=background_tasks, response=response, dependency_cache=dependency_cache). Source: fastapi/dependencies/utils.py:586-625.\n\nget_sub_counter_no_cache is an asynchronous callable with 2 parameters and 2 distinct calls. Signature: `async def get_sub_counter_no_cache(subcount, count)`. Key calls: Depends, app.get. Return paths: {'counter': count, 'subcounter': subcount}. Source: tests/test_dependency_cache.py:31-35.\n\nDepends is a synchronous callable with 3 parameters and 2 distinct calls. Signature: `def Depends(dependency, use_cache, scope)`. Key calls: Doc, params.Depends. Return paths: params.Depends(dependency=dependency, use_cache=use_cache, scope=scope). Purpose: Declare a FastAPI dependency. Source: fastapi/param_functions.py:2283-2322.\n\n_FrontendRouteGroup is a class with 8 directly declared methods and 1 base class. Signature: `class _FrontendRouteGroup(BaseRoute)`. Bases: BaseRoute. Key methods: __init__, add_frontend_route, matches, matches_with_prefix, _match, handle, url_path_for, _solve_dependencies. Key calls: AsyncExitStack, HTTPException, NoMatchFound, Request, RequestValidationError, _FrontendRoute, _build_dependant_with_parameterless_dependencies, _frontend_path_specificity, _get_scope_effective_route_context, _join_frontend_paths \u2026. Awaited operations: route.handle(scope, receive, send), route.app.get_response_for_scope(scope), response(scope, receive, send), solve_dependencies(request=request, dependant=dependant, dependency_overrides_provider=dependency_overrides_provider, async_exit_stack=request_stack, embed_body_fields=embed_body_fields). Control flow: line 2153: for route in self.routes; line 2157: if match == Match.FULL; line 2158: if full is None or specificity > full[2]; line 2160: if match == Match.PARTIAL; line 2161: if partial is None or specificity > partial[2]; line 2163: if full is not None. Return paths: (match, child_scope); (Match.NONE, {}, None); (Match.FULL, child_scope, route); (Match.PARTIAL, child_scope, route). Explicit raises: NoMatchFound(name, path_params); HTTPException(status_code=404); RequestValidationError(solved_result.errors). Source: fastapi/routing.py:2103-2142.\n\nSolvedDependency is a class with 0 directly declared methods and 0 base classes. Signature: `class SolvedDependency`. Source: fastapi/dependencies/utils.py:578-583.\n\n_FrontendRouteGroup._solve_dependencies is an asynchronous callable with 7 parameters and 6 distinct calls. Signature: `async def _solve_dependencies(self, scope, receive, send, dependant, dependency_overrides_provider, embed_body_fields)`. Key calls: AsyncExitStack, Request, RequestValidationError, scope.get, scope.pop, solve_dependencies. Awaited operations: solve_dependencies(request=request, dependant=dependant, dependency_overrides_provider=dependency_overrides_provider, async_exit_stack=request_stack, embed_body_fields=embed_body_fields). Control flow: line 2229: try/except handles none; line 2230: async with AsyncExitStack(); line 2232: async with AsyncExitStack(); line 2241: if solved_result.errors; line 2245: if previous_inner_astack is _SCOPE_MISSING; line 2249: if previous_function_astack is _SCOPE_MISSING. Explicit raises: RequestValidationError(solved_result.errors). Source: fastapi/routing.py:2216-2252.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/routing.py",
+        "tests/test_dependency_cache.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used.",
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "semantic-parameter-analysis",
+      "passed": true,
+      "latency_ms": 47.3815020013717,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-a4cee9c5-semantic-parameter-analysis",
+      "answer": "Resolved: fastapi.dependencies.utils.get_dependant (function) at fastapi/dependencies/utils.py:271-347; fastapi.dependencies.utils.analyze_param (function) at fastapi/dependencies/utils.py:381-547; fastapi.routing._build_dependant_with_parameterless_dependencies (function) at fastapi/routing.py:855-869.\n\nMulti-file source analysis:\n\nget_dependant is a synchronous callable with 7 parameters and 17 distinct calls. Signature: `def get_dependant(path, call, name, own_oauth_scopes, parent_oauth_scopes, use_cache, scope)`. Key calls: Dependant, DependencyScopeError, _get_computed_scope, _is_async_gen_callable, _is_gen_callable, add_non_field_param_to_dependency, add_param_to_fields, analyze_param, dependant.body_params.append, dependant.dependencies.append \u2026. Control flow: line 294: for (param_name, param) in signature_params.items(); line 302: if param_details.depends is not None; line 304: if (_is_gen_callable(dependant.call) or _is_async_gen_callable(dependant.call)) and _get_computed_scope(dependant=dependant) == 'request' and (param_details.depends.scope == 'function'); line 319: if isinstance(param_details.depends, params.Security); line 320: if param_details.depends.scopes; line 333: if add_non_field_param_to_dependency(param_name=param_name, type_annotation=param_details.type_annotation, dependant=dependant). Return paths: dependant. Explicit raises: DependencyScopeError(f'The dependency \"{call_name}\" has a scope of \"request\", it cannot depend on dependencies with scope \"function\".'). Source: fastapi/dependencies/utils.py:271-310.\n\nanalyze_param is a synchronous callable with 4 parameters and 22 distinct calls. Signature: `def analyze_param(param_name, annotation, value, is_path_param)`. Key calls: ParamDetails, copy, copy_field_info, create_model_field, dataclasses.replace, ensure_multipart_is_installed, field_annotation_is_scalar, field_annotation_is_scalar_sequence, get_args, get_origin \u2026. Control flow: line 392: if is_typealiastype(annotation); line 395: if annotation is not inspect.Signature.empty; line 399: if get_origin(use_annotation) is Annotated; line 419: if fastapi_specific_annotations; line 426: if isinstance(fastapi_annotation, FieldInfo); line 438: if value is not inspect.Signature.empty. Return paths: ParamDetails(type_annotation=type_annotation, depends=depends, field=field). Source: fastapi/dependencies/utils.py:381-420.\n\n_build_dependant_with_parameterless_dependencies is a synchronous callable with 3 parameters and 5 distinct calls. Signature: `def _build_dependant_with_parameterless_dependencies(path, call, dependencies)`. Key calls: _get_flat_body_params, _should_embed_body_fields, dependant.dependencies.insert, get_dependant, get_parameterless_sub_dependant. Control flow: line 862: for depends in dependencies[::-1]. Return paths: (dependant, body_params, embed_body_fields). Source: fastapi/routing.py:855-869.\n\nsolve_dependencies is an asynchronous callable with 10 parameters and 23 distinct calls. Signature: `async def solve_dependencies(request, dependant, body, background_tasks, response, dependency_overrides_provider, dependency_cache, async_exit_stack, embed_body_fields, _uses_scopes_cache)`. Key calls: BackgroundTasks, Response, SecurityScopes, SolvedDependency, _get_cache_key, _get_oauth_scopes, _is_async_gen_callable, _is_coroutine_callable, _is_gen_callable, _solve_generator \u2026. Awaited operations: solve_dependencies(request=request, dependant=use_sub_dependant, body=body, background_tasks=background_tasks, response=response, dependency_overrides_provider=dependency_overrides_provider, dependency_cache=dependency_cache, async_exit_stack=async_exit_stack, embed_body_fields=embed_body_fields, _uses_scopes_cache=_uses_scopes_cache), request_body_to_args(body_fields=dependant.body_params, received_body=body, embed_body_fields=embed_body_fields), _solve_generator(dependant=use_sub_dependant, stack=use_astack, sub_values=solved_result.values), call(**solved_result.values), run_in_threadpool(call, **solved_result.values). Control flow: line 611: if response is None; line 615: if dependency_cache is None; line 617: if _uses_scopes_cache is None; line 619: for sub_dependant in dependant.dependencies; line 623: if dependency_overrides_provider and dependency_overrides_provider.dependency_overrides; line 653: if solved_result.errors. Return paths: SolvedDependency(values=values, errors=errors, background_tasks=background_tasks, response=response, dependency_cache=dependency_cache). Source: fastapi/dependencies/utils.py:586-625.\n\nget_request_handler is a synchronous callable with 16 parameters and 63 distinct calls. Signature: `def get_request_handler(dependant, body_field, status_code, response_class, response_field, response_model_include, response_model_exclude, response_model_by_alias, response_model_exclude_unset, response_model_exclude_defaults, response_model_exclude_none, dependency_overrides_provider, embed_body \u2026`. Key calls: Default, EndpointContext, HTTPException, RequestValidationError, Response, ResponseValidationError, StreamingResponse, _async_stream_jsonl, _async_stream_raw, _build_response_args \u2026. Awaited operations: solve_dependencies(request=request, dependant=dependant, body=cast(dict[str, Any] | FormData | bytes | None, body), dependency_overrides_provider=depende \u2026",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used.",
+        "Response served from revision-scoped cache."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "stream-implementation-apirouter",
+      "passed": true,
+      "latency_ms": 42.676387001847615,
+      "first_event_ms": 2.5386320012330543,
+      "checks": {
+        "http_200": true,
+        "required_events": true,
+        "started_before_completed": true,
+        "chunked_tokens": true
+      },
+      "failures": [],
+      "events": [
+        "status",
+        "status",
+        "evidence",
+        "evidence",
+        "evidence",
+        "token",
+        "token",
+        "token",
+        "token",
+        "token",
+        "token",
+        "token",
+        "token",
+        "token",
+        "token",
+        "warning",
+        "warning",
+        "done"
+      ],
+      "statuses": [
+        "orchestration_started",
+        "completed"
+      ],
+      "response_status": 200
+    }
+  ]
+}

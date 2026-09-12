@@ -1,0 +1,68 @@
+{
+  "created_at": "2026-09-04T10:32:20.513424+00:00",
+  "run_id": "91b74282",
+  "requests": 10,
+  "concurrency": 3,
+  "completed": 10,
+  "rejected": 0,
+  "failed": 0,
+  "duration_seconds": 0.373,
+  "throughput_requests_per_second": 26.781,
+  "latency": {
+    "p50_ms": 108.385,
+    "p95_ms": 117.098,
+    "maximum_ms": 117.098
+  },
+  "results": [
+    {
+      "index": 0,
+      "status": 200,
+      "latency_ms": 108.38464900007239
+    },
+    {
+      "index": 1,
+      "status": 200,
+      "latency_ms": 104.88245699889376
+    },
+    {
+      "index": 2,
+      "status": 200,
+      "latency_ms": 107.47285900288261
+    },
+    {
+      "index": 3,
+      "status": 200,
+      "latency_ms": 109.30156000176794
+    },
+    {
+      "index": 4,
+      "status": 200,
+      "latency_ms": 108.64825899989228
+    },
+    {
+      "index": 5,
+      "status": 200,
+      "latency_ms": 108.07528599980287
+    },
+    {
+      "index": 6,
+      "status": 200,
+      "latency_ms": 115.8987610033364
+    },
+    {
+      "index": 7,
+      "status": 200,
+      "latency_ms": 117.09831599728204
+    },
+    {
+      "index": 8,
+      "status": 200,
+      "latency_ms": 115.89339000056498
+    },
+    {
+      "index": 9,
+      "status": 200,
+      "latency_ms": 39.41715600012685
+    }
+  ]
+}

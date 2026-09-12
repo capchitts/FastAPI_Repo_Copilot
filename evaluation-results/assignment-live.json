@@ -1,0 +1,269 @@
+{
+  "suite_version": 1,
+  "run_id": "67ded03b",
+  "created_at": "2026-09-12T03:25:06.128782+00:00",
+  "base_url": "http://localhost:8000",
+  "repository_id": "fastapi",
+  "revision": "50113da16fec53b66b80d75e80a89296de4fa5a5",
+  "passed": 8,
+  "total": 9,
+  "pass_rate": 0.8888888888888888,
+  "minimum_pass_rate": 1.0,
+  "latency": {
+    "minimum_ms": 710.948,
+    "p50_ms": 1640.516,
+    "p95_ms": 3857.766,
+    "maximum_ms": 3857.766
+  },
+  "results": [
+    {
+      "id": "fastapi-class",
+      "passed": true,
+      "latency_ms": 3857.7659540005698,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-fastapi-class",
+      "answer": "fastapi.applications.FastAPI (class)\n\nSources: [graph entity: class:73d8df1990f678c04e5cff9c2cc8fa231062c03c20aa386a9c63bf9d48a89c37]",
+      "agents_used": [
+        "graph"
+      ],
+      "source_paths": [],
+      "warnings": [],
+      "response_status": 200
+    },
+    {
+      "id": "depends-docstring",
+      "passed": false,
+      "latency_ms": 1730.9009129994593,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": false,
+        "trace_id": true
+      },
+      "failures": [
+        "missing answer term groups: [['depends'], ['dependency']]"
+      ],
+      "trace_id": "golden-67ded03b-depends-docstring",
+      "answer": "A \"dependable\" callable (like a function).\n\nDon't call it directly, FastAPI will call it for you, just pass the object\ndirectly.\n\nRead more about it in the\n[FastAPI docs for Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/)\n\nBy default, after a dependency is called the first time in a request, if\nthe dependency is declared again for the rest of the request (for example\nif the dependency is needed by several dependencies), the value will be\na re-used for the rest of the request.\n\nSet `use_cache` to `False` to disable this behavior and ensure the\ndependency is called again (if declared more than once) in the same request.\n\nRead more about it in the\n[FastAPI docs about sub-dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/sub-dependencies/#using-the-same-dependency-multiple-times)\n\nMainly for dependencies with `yield`, define when the dependency function\nshould start (the code before `yield`) and when it sho\n\nSources: [fastapi/param_functions.py:2283-2322]",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/param_functions.py"
+      ],
+      "warnings": [],
+      "response_status": 200
+    },
+    {
+      "id": "request-validation",
+      "passed": true,
+      "latency_ms": 2427.22104799941,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-request-validation",
+      "answer": "FastAPI validates requests by first converting the raw request body into a dictionary of values that match the endpoint\u2019s declared parameters. The function `request_body_to_args` (in `fastapi/dependencies/utils.py`) extracts form or JSON data, then for each declared body field it calls `_validate_value_with_model_field`. This uses the field\u2019s Pydantic `ModelField` to check type, required status, default values and run the field\u2019s validator, producing a value or an error entry. All errors are collected and, if any exist, a `RequestValidationError` is raised. \n\nWhen a request is dispatched, `get_request_handler` (in `fastapi/routing.py`) wraps the endpoint call. It first calls `solve_dependencies` (in `fastapi/dependencies/utils.py`) to resolve all dependency injections\u2014including body parameters\u2014using the dictionary produced by `request_body_to_args`. If dependency resolution produces errors, they are propagated as validation errors. Otherwise the endpoint is executed with the resolved arguments. The response is then validated against the declared response model; if that fails a `ResponseValidationError` is raised. This sequence ensures request payloads are parsed, validated against Pydantic models, and injected into the endpoint, with clear error reporting.\n\nThis mechanism uses the functions `request_body_to_args`, `_validate_value_with_model_field`, `solve_dependencies`, and `get_request_handler` to perform parsing, validation, dependency resolution, and response handling.\n\nSources: [fastapi/routing.py:1-6447] [fastapi/dependencies/utils.py:1-1053] [fastapi/routing.py:375-414] [fastapi/dependencies/utils.py:586-625] [fastapi/dependencies/utils.py:951-990] [fastapi/dependencies/utils.py:734-742]",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [],
+      "response_status": 200
+    },
+    {
+      "id": "apirouter-subclasses",
+      "passed": true,
+      "latency_ms": 1575.7748080004603,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-apirouter-subclasses",
+      "answer": "No classes inherit from APIRouter.\n\nSources: [graph entity: class:21b6886cf14456bf69420a3d4f8cf4a309bd20fb7cda026fe188e7460dc64d2c]",
+      "agents_used": [
+        "graph"
+      ],
+      "source_paths": [],
+      "warnings": [],
+      "response_status": 200
+    },
+    {
+      "id": "routing-decorators",
+      "passed": true,
+      "latency_ms": 1819.934841999384,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-routing-decorators",
+      "answer": "I cannot determine all decorators used in the routing module due to insufficient evidence.\n\nSources: [fastapi/routing.py:1-6447]",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/routing.py"
+      ],
+      "warnings": [],
+      "response_status": 200
+    },
+    {
+      "id": "request-lifecycle",
+      "passed": true,
+      "latency_ms": 1640.5164709995006,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-request-lifecycle",
+      "answer": "FastAPI request lifecycle (static, source-grounded trace):\n\n1. **ASGI entry:** `FastAPI.__call__` updates the ASGI scope and delegates into the inherited Starlette application stack. [fastapi/applications.py:1160-1163]\n\n2. **Matched route handler:** After Starlette selects an `APIRoute`, `get_route_handler` creates the handler for that path operation. [fastapi/routing.py:1225-1249]\n\n3. **Request handling:** `get_request_handler` builds the per-request coroutine that coordinates body processing, dependency resolution, endpoint execution, and response creation. [fastapi/routing.py:375-414]\n\n4. **Dependency resolution:** `solve_dependencies` recursively resolves dependency values and manages the request-scoped dependency cache and exit stacks. [fastapi/dependencies/utils.py:586-625]\n\n5. **Endpoint invocation:** `run_endpoint_function` invokes an async endpoint directly or sends a synchronous endpoint to the thread pool. [fastapi/routing.py:344-354]\n\n6. **Response serialization:** `serialize_response` validates and serializes the endpoint result according to the configured response field and serialization options. [fastapi/routing.py:301-340]\n\nTogether, the bounded trace is: `FastAPI.__call__` \u2192 `APIRoute.get_route_handler` \u2192 `get_request_handler` \u2192 `solve_dependencies` \u2192 endpoint execution \u2192 `serialize_response` \u2192 response. Runtime middleware dispatch is inherited from Starlette and is not fully expanded by this FastAPI-only static trace.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/applications.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "dependency-injection",
+      "passed": true,
+      "latency_ms": 1244.9063200001547,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-dependency-injection",
+      "answer": "Resolved: fastapi.param_functions.Depends (function) at fastapi/param_functions.py:2283-2369; fastapi.dependencies.utils.get_dependant (function) at fastapi/dependencies/utils.py:271-347; fastapi.dependencies.utils.get_parameterless_sub_dependant (function) at fastapi/dependencies/utils.py:132-144.\n\nMulti-file source analysis:\n\nDepends is a synchronous callable with 3 parameters and 2 distinct calls. Signature: `def Depends(dependency, use_cache, scope)`. Key calls: Doc, params.Depends. Return paths: params.Depends(dependency=dependency, use_cache=use_cache, scope=scope). Purpose: Declare a FastAPI dependency. Source: fastapi/param_functions.py:2283-2322.\n\nget_dependant is a synchronous callable with 7 parameters and 17 distinct calls. Signature: `def get_dependant(path, call, name, own_oauth_scopes, parent_oauth_scopes, use_cache, scope)`. Key calls: Dependant, DependencyScopeError, _get_computed_scope, _is_async_gen_callable, _is_gen_callable, add_non_field_param_to_dependency, add_param_to_fields, analyze_param, dependant.body_params.append, dependant.dependencies.append \u2026. Control flow: line 294: for (param_name, param) in signature_params.items(); line 302: if param_details.depends is not None; line 304: if (_is_gen_callable(dependant.call) or _is_async_gen_callable(dependant.call)) and _get_computed_scope(dependant=dependant) == 'request' and (param_details.depends.scope == 'function'); line 319: if isinstance(param_details.depends, params.Security); line 320: if param_details.depends.scopes; line 333: if add_non_field_param_to_dependency(param_name=param_name, type_annotation=param_details.type_annotation, dependant=dependant). Return paths: dependant. Explicit raises: DependencyScopeError(f'The dependency \"{call_name}\" has a scope of \"request\", it cannot depend on dependencies with scope \"function\".'). Source: fastapi/dependencies/utils.py:271-310.\n\nget_parameterless_sub_dependant is a synchronous callable with 2 parameters and 4 distinct calls. Signature: `def get_parameterless_sub_dependant(depends, path)`. Key calls: callable, get_dependant, isinstance, own_oauth_scopes.extend. Control flow: line 137: if isinstance(depends, params.Security) and depends.scopes. Return paths: get_dependant(path=path, call=depends.dependency, scope=depends.scope, own_oauth_scopes=own_oauth_scopes). Source: fastapi/dependencies/utils.py:132-144.\n\nsolve_dependencies is an asynchronous callable with 10 parameters and 23 distinct calls. Signature: `async def solve_dependencies(request, dependant, body, background_tasks, response, dependency_overrides_provider, dependency_cache, async_exit_stack, embed_body_fields, _uses_scopes_cache)`. Key calls: BackgroundTasks, Response, SecurityScopes, SolvedDependency, _get_cache_key, _get_oauth_scopes, _is_async_gen_callable, _is_coroutine_callable, _is_gen_callable, _solve_generator \u2026. Awaited operations: solve_dependencies(request=request, dependant=use_sub_dependant, body=body, background_tasks=background_tasks, response=response, dependency_overrides_provider=dependency_overrides_provider, dependency_cache=dependency_cache, async_exit_stack=async_exit_stack, embed_body_fields=embed_body_fields, _uses_scopes_cache=_uses_scopes_cache), request_body_to_args(body_fields=dependant.body_params, received_body=body, embed_body_fields=embed_body_fields), _solve_generator(dependant=use_sub_dependant, stack=use_astack, sub_values=solved_result.values), call(**solved_result.values), run_in_threadpool(call, **solved_result.values). Control flow: line 611: if response is None; line 615: if dependency_cache is None; line 617: if _uses_scopes_cache is None; line 619: for sub_dependant in dependant.dependencies; line 623: if dependency_overrides_provider and dependency_overrides_provider.dependency_overrides; line 653: if solved_result.errors. Return paths: SolvedDependency(values=values, errors=errors, background_tasks=background_tasks, response=response, dependency_cache=dependency_cache). Source: fastapi/dependencies/utils.py:586-625.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "path-query-comparison",
+      "passed": true,
+      "latency_ms": 766.1226400005035,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-path-query-comparison",
+      "answer": "Resolved: fastapi.param_functions.Path (function) at fastapi/param_functions.py:13-354; fastapi.param_functions.Query (function) at fastapi/param_functions.py:357-698.\n\nCompared Path with Query; found 2 similarities and 1 difference.\nSimilarities: Both entities are functions. They expose the same named parameter interface.\nDifferences: Their implementations construct or call different collaborators: Path uniquely uses params.Path, while Query uniquely uses params.Query.\nPath is a synchronous callable with 29 parameters and 3 distinct calls. Signature: `def Path(default, default_factory, alias, alias_priority, validation_alias, serialization_alias, title, description, gt, ge, lt, le, min_length, max_length, pattern, regex, discriminator, strict, multiple_of, allow_inf_nan, max_digits, decimal_places, examples, example, openapi_examples, deprecate \u2026`. Key calls: Doc, deprecated, params.Path. Return paths: params.Path(default=default, default_factory=default_factory, alias=alias, alias_priority=alias_priority, validation_alias=validation_alias, serialization_alias=serialization_alias, title=title, description=description, gt=gt, ge=ge, lt=lt, le=le, min_length=min_length, max_length=max_length, pattern=pattern, regex=regex, discriminator=discriminator, strict=strict, multiple_of=multiple_of, allow_inf_nan=allow_inf_nan, max_digits=max_digits, decimal_places=decimal_places, example=example, examples=examples, openapi_examples=openapi_examples, deprecated=deprecated, include_in_schema=include_in_schema, json_schema_extra=json_schema_extra, **extra). Purpose: Declare a path parameter for a *path operation*. Source: fastapi/param_functions.py:13-52.\nQuery is a synchronous callable with 29 parameters and 3 distinct calls. Signature: `def Query(default, default_factory, alias, alias_priority, validation_alias, serialization_alias, title, description, gt, ge, lt, le, min_length, max_length, pattern, regex, discriminator, strict, multiple_of, allow_inf_nan, max_digits, decimal_places, examples, example, openapi_examples, deprecat \u2026`. Key calls: Doc, deprecated, params.Query. Return paths: params.Query(default=default, default_factory=default_factory, alias=alias, alias_priority=alias_priority, validation_alias=validation_alias, serialization_alias=serialization_alias, title=title, description=description, gt=gt, ge=ge, lt=lt, le=le, min_length=min_length, max_length=max_length, pattern=pattern, regex=regex, discriminator=discriminator, strict=strict, multiple_of=multiple_of, allow_inf_nan=allow_inf_nan, max_digits=max_digits, decimal_places=decimal_places, example=example, examples=examples, openapi_examples=openapi_examples, deprecated=deprecated, include_in_schema=include_in_schema, json_schema_extra=json_schema_extra, **extra). Source: fastapi/param_functions.py:357-396.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/param_functions.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used."
+      ],
+      "response_status": 200
+    },
+    {
+      "id": "core-design-patterns",
+      "passed": true,
+      "latency_ms": 710.9481830002551,
+      "checks": {
+        "http_200": true,
+        "partial": true,
+        "agents": true,
+        "source_any": true,
+        "source_all": true,
+        "answer_terms": true,
+        "trace_id": true
+      },
+      "failures": [],
+      "trace_id": "golden-67ded03b-core-design-patterns",
+      "answer": "Resolved: fastapi.applications.FastAPI (class) at fastapi/applications.py:42-4774.\n\nSource-grounded core pattern observations:\n\n1. **Inheritance-based framework extension:** FastAPI Inherits from Starlette. This lets FastAPI reuse Starlette's ASGI foundation while layering API-specific behavior on top. [fastapi/applications.py:42]\n\n2. **Decorator-based API evolution:** on_event Uses decorator deprecated('\\n        on_event is deprecated, use lifespan event handlers instead.\\n\\n        Read more about it in the\\n        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).\\n        '). Decorators attach lifecycle or compatibility policy without changing the wrapped callable's core role. [fastapi/applications.py:4654]\n\n3. **Asynchronous orchestration (execution model):** Async entry points include __call__, openapi, swagger_ui_html, redoc_html, swagger_ui_redirect [fastapi/applications.py:1160, 1108, 1123, 1151, 1141]. This supports non-blocking ASGI request handling; it is an execution style rather than a Gang-of-Four design pattern.\n\nThis is a conservative AST-based view of the selected core module, not an exhaustive claim about every architectural pattern in the repository.",
+      "agents_used": [
+        "graph",
+        "repository",
+        "code_analyst"
+      ],
+      "source_paths": [
+        "fastapi/applications.py"
+      ],
+      "warnings": [
+        "LLM synthesis unavailable; deterministic fallback used."
+      ],
+      "response_status": 200
+    }
+  ]
+}

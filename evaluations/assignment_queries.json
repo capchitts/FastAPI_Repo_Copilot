@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "minimum_pass_rate": 1.0,
+  "cases": [
+    {
+      "id": "fastapi-class",
+      "category": "assignment",
+      "query": "What is the FastAPI class?",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "fastapi"
+        ]
+      ]
+    },
+    {
+      "id": "depends-docstring",
+      "category": "assignment",
+      "query": "Show me the docstring for the Depends function",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "depends"
+        ],
+        [
+          "dependency"
+        ]
+      ]
+    },
+    {
+      "id": "request-validation",
+      "category": "assignment",
+      "query": "How does FastAPI handle request validation?",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "validat"
+        ]
+      ]
+    },
+    {
+      "id": "apirouter-subclasses",
+      "category": "assignment",
+      "query": "What classes inherit from APIRouter?",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "apirouter"
+        ]
+      ]
+    },
+    {
+      "id": "routing-decorators",
+      "category": "assignment",
+      "query": "Find all decorators used in the routing module",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "decorator"
+        ]
+      ]
+    },
+    {
+      "id": "request-lifecycle",
+      "category": "assignment",
+      "query": "Explain the complete lifecycle of a FastAPI request",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "solve_dependencies"
+        ],
+        [
+          "serialize_response"
+        ]
+      ]
+    },
+    {
+      "id": "dependency-injection",
+      "category": "assignment",
+      "query": "How does dependency injection work and show me examples from the codebase",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "depends"
+        ],
+        [
+          "depend"
+        ]
+      ]
+    },
+    {
+      "id": "path-query-comparison",
+      "category": "assignment",
+      "query": "Compare how Path and Query parameters are implemented",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "path"
+        ],
+        [
+          "query"
+        ]
+      ]
+    },
+    {
+      "id": "core-design-patterns",
+      "category": "assignment",
+      "query": "What design patterns are used in FastAPI's core and why?",
+      "expected_agents": [
+        "graph"
+      ],
+      "answer_term_groups": [
+        [
+          "pattern"
+        ]
+      ]
+    }
+  ]
+}
