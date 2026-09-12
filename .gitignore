@@ -24,6 +24,7 @@ repositories/*
 
 # Documentation submitted with the project. All other Markdown notes are local prep.
 *.md
+!evaluation-results/assignment-review.md
 !README.md
 !DESIGN.md
 !WALKTHROUGH.md
